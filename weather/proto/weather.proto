@@ -23,11 +23,17 @@ message DateRange {
 
 message GetWeatherRequest {
   string location = 1;       // The city name, e.g., "Copenhagen, DK"
-  DateRange range = 2;       // Date range to get for
+  DateRange dateRange = 2;       // Date range to get for
   TemperatureUnit units = 3; // Units for temperatures
 }
 
 message GetWeatherResponse {
-  float temperature = 1;
-  string conditions = 2;
+  repeated WeatherInfo response = 1;
+}
+
+message WeatherInfo {
+  google.type.Date date = 1;
+  float hiTemperature = 2;
+  float lowTemperature = 3;
+  string conditions = 4;
 }
