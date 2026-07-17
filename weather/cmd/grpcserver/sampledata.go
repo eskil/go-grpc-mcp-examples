@@ -128,10 +128,10 @@ func GetDataForDateRange(begin *date.Date, end *date.Date) ([]*weatherv1.Weather
 		}
 		if collecting {
 			result = append(result, &weatherv1.WeatherInfo{
-				Date:          day.Date,
-				HiTemperature: day.TempF,
+				Date:           day.Date,
+				HiTemperature:  day.TempF,
 				LowTemperature: day.NightTempF,
-				Conditions:    day.Conditions,
+				Conditions:     day.Conditions,
 			})
 		}
 		if sameDate(day.Date, end) {

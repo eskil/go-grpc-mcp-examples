@@ -5,8 +5,11 @@ all: genproto
 genproto: proto/weather.proto
 	protoc --go_out=. --go_opt=module=weather --go-grpc_out=. --go-grpc_opt=module=weather -Iproto proto/weather.proto
 
-run: all
-	go run ./cmd
+run-grpc: all
+	go run ./cmd/grpcserver
+
+run-mcp: all
+	go run ./cmd/mcpserver
 
 curl:
 	grpcurl -plaintext -proto proto/weather.proto -import-path proto \
