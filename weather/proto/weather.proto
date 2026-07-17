@@ -1,0 +1,33 @@
+syntax = "proto3";
+package weather.v1;
+
+option go_package = "weather/v1;weatherv1";
+
+import "google/type/date.proto";
+
+// WeatherService provides historic weather info for a location
+service WeatherService {
+  // Get the current weather conditions for a specific city location.
+  rpc GetWeather(GetWeatherRequest) returns (GetWeatherResponse);
+}
+
+enum TemperatureUnit {
+  CELCIUS = 0;
+  FAHRENHEIT = 1;
+}
+
+message DateRange {
+  google.type.Date begin = 1;
+  google.type.Date end = 2;
+}
+
+message GetWeatherRequest {
+  string location = 1;       // The city name, e.g., "Copenhagen, DK"
+  DateRange range = 2;       // Date range to get for
+  TemperatureUnit units = 3; // Units for temperatures
+}
+
+message GetWeatherResponse {
+  float temperature = 1;
+  string conditions = 2;
+}

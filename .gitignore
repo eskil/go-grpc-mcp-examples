@@ -1,0 +1,8 @@
+*.pb.go
+
+# Emacs files
+\#*\#
+*~
+
+# MacOS
+.DS_Store%
