@@ -4,15 +4,79 @@
 
 # gRPC MCP Example
 
+## What?
+
 This is a sample MCP backed by a gRPC service. This just demonstrates
 the setup. It's backed by static scraped weather data so it does not
 provide real functionality.
 
 It's mostly handcoded as a learning exercise.
 
+## Why?
+
 MCPs are extremely useful for connecting agents to internal data (customer data/setup/history; production configuration etc) that isn't readily available through existing LLM tools.
 
+It's common to have existing gRPC services to access relevant data. Fronting this with a MCP server that specifies tools to allow access allows tools like `claude` to access your data reusing existing gRPC services.
+
 See also https://lethain.com/systems-mcp/ and other articles.
+
+## How?
+
+We define a dummy grpc server for weather data. It uses hardcoded data for three months in 2026 for Copenhagen, DK.
+
+We then define a MCP tool named `get_weather` with a description of `temperature and conditions for a location and date`
+
+```go
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_weather",
+		Description: "Get temperature and conditions for a location and date",
+	}, getWeather)
+```
+
+This basically tells the LLM how it can get relevant info.
+
+`getWeather` then just uses a grpc client function;
+
+```go
+func getWeather(
+	ctx context.Context,
+	mcpreq *mcp.CallToolRequest,
+	params GetWeatherParams,
+) (
+	*mcp.CallToolResult,
+	any,
+	error,
+) {
+...
+```
+
+Where the `params` struct tags inform the LLM how to use it;
+
+```go
+type GetWeatherParams struct {
+	Location        string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
+	FromDate        string `json:"from_date" jsonschema:"start date to query, YYYY-MM-DD"`
+    ...
+}
+```
+
+The response structure also uses tags and jsonschema to describe the result.
+
+```go
+type WeatherInfo struct {
+	Date          string `json:"date" jsonschema:"date of the weather forecast"`
+	Conditions    string `json:"conditions" jsonschema:"weather conditions"`
+	DaytimeTemp   string `json:"hitemp" jsonschema:"daytime temperature"`
+    ...
+}
+
+type GetWeatherResult struct {
+	Location         string        `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
+	Days             []WeatherInfo `json:"days" jsonschema:"weather info for each day in the date range"`
+}
+```
+
+See the implementation of `getWeather` and the structures for the full example.
 
 ## Setup & run
 
@@ -96,7 +160,7 @@ grpcurl -plaintext -proto proto/weather.proto -import-path proto \
 Run a `claude` session. It should pick up the `.mcp.json`. Run `/mcp` to list the `weather` tool and wether it's connected.
 
 ```
-     Project MCPs (<source/path>/to/go-grpc-mcp-examples/.mcp.json)                    ❯ weather · ✔ connected · 1 tool
+     Project MCPs (<source/path/to>/go-grpc-mcp-examples/.mcp.json)                    ❯ weather · ✔ connected · 1 tool
 ```
 
 ```

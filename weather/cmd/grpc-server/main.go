@@ -3,14 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"net"
+
+	weatherv1 "weather/v1"
 
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc"
-	weatherv1 "weather/v1"
 )
+
+// The address of the gRPC server that provides weather information.
+// In a production setup, this would be a config value (k8s configmap, env var, etc.),
+// and point to a load balanced endpoint of the weather service.
+const serverAddr = ":50051"
 
 func formatDate(d *date.Date) string {
 	return fmt.Sprintf("%04d/%02d/%02d", d.Year, d.Month, d.Day)
@@ -45,7 +52,7 @@ func (s *weatherServer) GetWeather(ctx context.Context, req *weatherv1.GetWeathe
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
+	listener, err := net.Listen("tcp", serverAddr)
 	if err != nil {
 		log.Fatal().Err(err).Msg("listen")
 	}
@@ -53,8 +60,8 @@ func main() {
 	grpcServer := grpc.NewServer()
 	weatherv1.RegisterWeatherServiceServer(grpcServer, &weatherServer{})
 
-	log.Info().Msg("weather gRPC server listening on :50051")
-	if err := grpcServer.Serve(lis); err != nil {
+	log.Info().Msg("weather gRPC server listening on " + serverAddr)
+	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatal().Err(err).Msg("serve")
 	}
 }
