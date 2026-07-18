@@ -18,7 +18,8 @@ const serverAddr = "localhost:50051"
 
 type GetWeatherParams struct {
 	Location        string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
-	Date            string `json:"date" jsonschema:"date to query, YYYY-MM-DD"`
+	FromDate        string `json:"from_date" jsonschema:"start date to query, YYYY-MM-DD"`
+	ToDate          string `json:"to_date" jsonschema:"end date to query, YYYY-MM-DD"`
 	TemperatureUnit string `json:"temperature_unit" jsonschema:"C or F"`
 }
 
@@ -79,7 +80,12 @@ func getWeather(
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	d, err := dateStrToDate(params.Date)
+	from_date, err := dateStrToDate(params.FromDate)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	to_date, err := dateStrToDate(params.ToDate)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -89,8 +95,8 @@ func getWeather(
 	rpcreq := &weatherv1.GetWeatherRequest{
 		Location: params.Location,
 		DateRange: &weatherv1.DateRange{
-			Begin: d,
-			End:   d,
+			Begin: from_date,
+			End:   to_date,
 		},
 		TemperatureUnit: temperatureUnit,
 	}
