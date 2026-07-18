@@ -24,7 +24,7 @@ message DateRange {
 message GetWeatherRequest {
   string location = 1;       // The city name, e.g., "Copenhagen, DK"
   DateRange dateRange = 2;       // Date range to get for
-  TemperatureUnit units = 3; // Units for temperatures
+  TemperatureUnit temperatureUnit = 3; // Units for temperatures
 }
 
 message GetWeatherResponse {

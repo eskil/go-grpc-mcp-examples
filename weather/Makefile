@@ -19,6 +19,6 @@ bin/mcp-server:
 
 curl:
 	grpcurl -plaintext -proto proto/weather.proto -import-path proto \
-		-d '{"location":"Copenhagen, DK","dateRange":{"begin":{"year":2026,"month":6,"day":22},"end":{"year":2026,"month":6,"day":28}},"units":"CELCIUS"}' \
+		-d '{"location":"Copenhagen, DK","dateRange":{"begin":{"year":2026,"month":6,"day":22},"end":{"year":2026,"month":6,"day":28}},"temperatureUnit":"CELCIUS"}' \
 		localhost:50051 weather.v1.WeatherService/GetWeather
 

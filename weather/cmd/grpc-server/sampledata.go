@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"google.golang.org/genproto/googleapis/type/date"
 	weatherv1 "weather/v1"
 )
@@ -119,11 +120,21 @@ func sameDate(a *date.Date, b *date.Date) bool {
 	return a.Year == b.Year && a.Month == b.Month && a.Day == b.Day
 }
 
-func GetDataForDateRange(begin *date.Date, end *date.Date) ([]*weatherv1.WeatherInfo, error) {
+func GetDataForDateRange(
+	location string,
+	temperatureUnit weatherv1.TemperatureUnit,
+	dateRange *weatherv1.DateRange,
+) (
+	[]*weatherv1.WeatherInfo,
+	error,
+) {
+	if location != "Copenhagen, DK" {
+		return nil, errors.New("unknown location")
+	}
 	result := []*weatherv1.WeatherInfo{}
 	collecting := false
 	for _, day := range copenhagenSamples {
-		if sameDate(day.Date, begin) {
+		if sameDate(day.Date, dateRange.Begin) {
 			collecting = true
 		}
 		if collecting {
@@ -134,8 +145,15 @@ func GetDataForDateRange(begin *date.Date, end *date.Date) ([]*weatherv1.Weather
 				Conditions:     day.Conditions,
 			})
 		}
-		if sameDate(day.Date, end) {
+		if sameDate(day.Date, dateRange.End) {
 			break
+		}
+	}
+
+	if temperatureUnit == weatherv1.TemperatureUnit_CELCIUS {
+		for _, r := range result {
+			r.HiTemperature = (r.HiTemperature - 32) * (5 / 9)
+			r.LowTemperature = (r.LowTemperature - 32) * (5 / 9)
 		}
 	}
 

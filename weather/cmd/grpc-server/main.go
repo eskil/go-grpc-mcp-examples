@@ -32,7 +32,11 @@ func (s *weatherServer) GetWeather(ctx context.Context, req *weatherv1.GetWeathe
 		Dict("dateRange", dateRangeDict(req.DateRange)).
 		Str("location", req.Location).
 		Msg("getWeather")
-	info, err := GetDataForDateRange(req.DateRange.Begin, req.DateRange.End)
+	info, err := GetDataForDateRange(
+		req.Location,
+		req.TemperatureUnit,
+		req.DateRange,
+	)
 	if err != nil {
 		return nil, err
 	}
