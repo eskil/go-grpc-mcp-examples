@@ -2,14 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	weatherv1 "weather/v1"
 )
+
+const serverAddr = "localhost:50051"
 
 type GetWeatherParams struct {
 	Location string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
@@ -19,7 +23,7 @@ type GetWeatherParams struct {
 type WeatherInfo struct {
 	Date          string `json:"date"`
 	DaytimeTemp   string `json:"hitemp"`
-	NighttimeTemp string `json:"hitemp"`
+	NighttimeTemp string `json:"lowtemp"`
 	Conditions    string `json:"conditions"`
 }
 
@@ -42,6 +46,10 @@ func dateStrToDate(dateStr string) (*date.Date, error) {
 	}, nil
 }
 
+func formatDate(d *date.Date) string {
+	return fmt.Sprintf("%04d-%02d-%02d", d.Year, d.Month, d.Day)
+}
+
 func getWeather(
 	ctx context.Context,
 	mcpreq *mcp.CallToolRequest,
@@ -53,44 +61,49 @@ func getWeather(
 ) {
 	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect to server")
+		return nil, nil, err
 	}
 	defer conn.Close()
 
-	client := weatherv1.NewWeatherClient(conn)
+	client := weatherv1.NewWeatherServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
+
+	d, err := dateStrToDate(params.Date)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	rpcreq := &weatherv1.GetWeatherRequest{
 		Location: params.Location,
 		DateRange: &weatherv1.DateRange{
-			Begin: dateStrToDate(params.Date),
-			End:   dateStrToDate(params.Date),
+			Begin: d,
+			End:   d,
 		},
-		Units: weatherv1.TemperatureUnit.FAHRENHEIT,
+		Units: weatherv1.TemperatureUnit_FAHRENHEIT,
 	}
 
-	rpcres := client.GetWeather(ctx, rpcreq)
+	rpcres, err := client.GetWeather(ctx, rpcreq)
 	if err != nil {
-		log.Fatal().Err(err).Msg("calling GetWeather")
-		return nil, GetWeatherResult{}, err
+		log.Error().Err(err).Msg("error calling GetWeather")
+		return nil, nil, err
 	}
-	// TODO: dial your gRPC server, call GetWeather, translate the response
-	// into a *mcp.CallToolResult (text content, typically)
 
-	wi := rcpres.response[0]
+	days := make([]WeatherInfo, 0, len(rpcres.Response))
+	for _, wi := range rpcres.Response {
+		days = append(days, WeatherInfo{
+			Date:          formatDate(wi.Date),
+			DaytimeTemp:   fmt.Sprintf("%.0f", wi.HiTemperature),
+			NighttimeTemp: fmt.Sprintf("%.0f", wi.LowTemperature),
+			Conditions:    wi.Conditions,
+		})
+	}
+
 	return nil, &GetWeatherResult{
-		Location:         mcpreq.Location,
+		Location:         params.Location,
 		TemperatureUnits: "F",
-		Days: []WeatherInfo{
-			{
-				Date:          wi.Date,
-				DaytimeTemp:   wi.HiTemperature,
-				NighttimeTemp: wi.LowTemperature,
-				Conditions:    wi.Conditions,
-			},
-		},
+		Days:             days,
 	}, nil
 }
 

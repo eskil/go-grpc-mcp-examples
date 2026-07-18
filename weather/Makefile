@@ -1,15 +1,21 @@
 .PHONY: genproto curl run
 
-all: genproto
+all: genproto bin/grpc-server bin/mcp-server
 
 genproto: proto/weather.proto
 	protoc --go_out=. --go_opt=module=weather --go-grpc_out=. --go-grpc_opt=module=weather -Iproto proto/weather.proto
 
 run-grpc: all
-	go run ./cmd/grpcserver
+	go run ./cmd/grpc-server
 
 run-mcp: all
-	go run ./cmd/mcpserver
+	go run ./cmd/mcp-server
+
+bin/grpc-server:
+	go build -o bin/grpc-server ./cmd/grpc-server
+
+bin/mcp-server:
+	go build -o bin/mcp-server ./cmd/mcp-server
 
 curl:
 	grpcurl -plaintext -proto proto/weather.proto -import-path proto \
