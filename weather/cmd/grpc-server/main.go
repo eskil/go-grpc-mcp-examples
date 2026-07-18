@@ -31,6 +31,7 @@ func (s *weatherServer) GetWeather(ctx context.Context, req *weatherv1.GetWeathe
 	log.Info().
 		Dict("dateRange", dateRangeDict(req.DateRange)).
 		Str("location", req.Location).
+		Str("temp_unit", req.TemperatureUnit.String()).
 		Msg("getWeather")
 	info, err := GetDataForDateRange(
 		req.Location,

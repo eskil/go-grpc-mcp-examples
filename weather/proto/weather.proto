@@ -33,7 +33,7 @@ message GetWeatherResponse {
 
 message WeatherInfo {
   google.type.Date date = 1;
-  float hiTemperature = 2;
-  float lowTemperature = 3;
+  optional float hiTemperature = 2;
+  optional float lowTemperature = 3;
   string conditions = 4;
 }

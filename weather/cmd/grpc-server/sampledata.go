@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"google.golang.org/genproto/googleapis/type/date"
+	"google.golang.org/protobuf/proto"
 	weatherv1 "weather/v1"
 )
 
@@ -140,8 +141,8 @@ func GetDataForDateRange(
 		if collecting {
 			result = append(result, &weatherv1.WeatherInfo{
 				Date:           day.Date,
-				HiTemperature:  day.TempF,
-				LowTemperature: day.NightTempF,
+				HiTemperature:  proto.Float32(day.TempF),
+				LowTemperature: proto.Float32(day.NightTempF),
 				Conditions:     day.Conditions,
 			})
 		}
@@ -152,8 +153,8 @@ func GetDataForDateRange(
 
 	if temperatureUnit == weatherv1.TemperatureUnit_CELCIUS {
 		for _, r := range result {
-			r.HiTemperature = (r.HiTemperature - 32) * (5 / 9)
-			r.LowTemperature = (r.LowTemperature - 32) * (5 / 9)
+			r.HiTemperature = proto.Float32(float32(int32(10.0*((r.GetHiTemperature()-32)*5/9))) / 10.0)
+			r.LowTemperature = proto.Float32(float32(int32(10.0*((r.GetLowTemperature()-32)*5/9))) / 10.0)
 		}
 	}
 

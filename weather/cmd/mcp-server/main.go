@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -16,8 +17,9 @@ import (
 const serverAddr = "localhost:50051"
 
 type GetWeatherParams struct {
-	Location string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
-	Date     string `json:"date" jsonschema:"date to query, YYYY-MM-DD"`
+	Location        string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`
+	Date            string `json:"date" jsonschema:"date to query, YYYY-MM-DD"`
+	TemperatureUnit string `json:"temperature_unit" jsonschema:"C or F"`
 }
 
 type WeatherInfo struct {
@@ -50,6 +52,13 @@ func formatDate(d *date.Date) string {
 	return fmt.Sprintf("%04d-%02d-%02d", d.Year, d.Month, d.Day)
 }
 
+func parseTemperatureUnit(unit string) weatherv1.TemperatureUnit {
+	if strings.EqualFold(unit, "C") {
+		return weatherv1.TemperatureUnit_CELCIUS
+	}
+	return weatherv1.TemperatureUnit_FAHRENHEIT
+}
+
 func getWeather(
 	ctx context.Context,
 	mcpreq *mcp.CallToolRequest,
@@ -75,13 +84,15 @@ func getWeather(
 		return nil, nil, err
 	}
 
+	temperatureUnit := parseTemperatureUnit(params.TemperatureUnit)
+
 	rpcreq := &weatherv1.GetWeatherRequest{
 		Location: params.Location,
 		DateRange: &weatherv1.DateRange{
 			Begin: d,
 			End:   d,
 		},
-		Units: weatherv1.TemperatureUnit_FAHRENHEIT,
+		TemperatureUnit: temperatureUnit,
 	}
 
 	rpcres, err := client.GetWeather(ctx, rpcreq)
@@ -94,15 +105,20 @@ func getWeather(
 	for _, wi := range rpcres.Response {
 		days = append(days, WeatherInfo{
 			Date:          formatDate(wi.Date),
-			DaytimeTemp:   fmt.Sprintf("%.0f", wi.HiTemperature),
-			NighttimeTemp: fmt.Sprintf("%.0f", wi.LowTemperature),
+			DaytimeTemp:   fmt.Sprintf("%.0f", wi.GetHiTemperature()),
+			NighttimeTemp: fmt.Sprintf("%.0f", wi.GetLowTemperature()),
 			Conditions:    wi.Conditions,
 		})
 	}
 
+	temperatureUnits := "F"
+	if temperatureUnit == weatherv1.TemperatureUnit_CELCIUS {
+		temperatureUnits = "C"
+	}
+
 	return nil, &GetWeatherResult{
 		Location:         params.Location,
-		TemperatureUnits: "F",
+		TemperatureUnits: temperatureUnits,
 		Days:             days,
 	}, nil
 }
