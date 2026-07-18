@@ -5,7 +5,7 @@
       "command": "go",
       "args": [
         "run",
-        "./cmd/mcp-server"
+        "./weather/cmd/mcp-server"
       ],
       "env": {}
     }

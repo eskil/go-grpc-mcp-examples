@@ -6,15 +6,19 @@ import (
 	"strings"
 	"time"
 
+	weatherv1 "weather/v1"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	weatherv1 "weather/v1"
 )
 
-const serverAddr = "localhost:50051"
+// The address of the gRPC server that provides weather information.
+// In a production setup, this would be a config value (k8s configmap, env var, etc.),
+// and point to a load balanced endpoint of the weather service.
+const serverAddr = "127.0.0.1:50051"
 
 type GetWeatherParams struct {
 	Location        string `json:"location" jsonschema:"city name, e.g. Copenhagen, DK"`

@@ -22,3 +22,7 @@ curl:
 		-d '{"location":"Copenhagen, DK","dateRange":{"begin":{"year":2026,"month":6,"day":22},"end":{"year":2026,"month":6,"day":28}},"temperatureUnit":"CELCIUS"}' \
 		localhost:50051 weather.v1.WeatherService/GetWeather
 
+
+clean:
+	rm -f bin/grpc-server bin/mcp-server
+	rm -rf v1/

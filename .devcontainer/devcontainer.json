@@ -1,0 +1,28 @@
+{
+  "name": "go-grpc-mcp-examples",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    }
+  },
+  "remoteEnv": {
+    // go.work / go.mod pin go 1.26.5; GOTOOLCHAIN=auto lets the go
+    // command fetch the exact toolchain version on demand.
+    "GOTOOLCHAIN": "auto"
+  },
+  "postCreateCommand": "go install google.golang.org/protobuf/cmd/protoc-gen-go@latest && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest && go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "zxh404.vscode-proto3"
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": true
+      }
+    }
+  }
+}

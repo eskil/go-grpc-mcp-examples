@@ -4,5 +4,7 @@ SUBDIRS := weather
 
 all: $(SUBDIRS)
 
+clean: $(SUBDIRS)
+
 $(SUBDIRS):
-	$(MAKE) -C $@
+	$(MAKE) -C $@ $(MAKECMDGOALS)
