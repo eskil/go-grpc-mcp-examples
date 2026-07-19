@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
+	weatherv1 "weather/v1"
+
 	"google.golang.org/genproto/googleapis/type/date"
 	"google.golang.org/protobuf/proto"
-	weatherv1 "weather/v1"
 )
 
 // sampleDay holds one day of Copenhagen sample weather, transcribed from
@@ -17,6 +18,9 @@ type sampleDay struct {
 	Conditions string
 }
 
+// Static data scraped off https://world-weather.info/forecast/denmark/copenhagen/may-2026/
+// That site has bot protection, so we can't scrape it in real time. Plus for a sample
+// app, we don't want to be dependent on a live service.
 var copenhagenSamples = []sampleDay{
 	// May 2026
 	{&date.Date{Year: 2026, Month: 5, Day: 1}, 68, 48, "sunny"},
@@ -117,7 +121,7 @@ var copenhagenSamples = []sampleDay{
 	{&date.Date{Year: 2026, Month: 7, Day: 31}, 73, 61, "sunny"},
 }
 
-func sameDate(a *date.Date, b *date.Date) bool {
+func equalDate(a *date.Date, b *date.Date) bool {
 	return a.Year == b.Year && a.Month == b.Month && a.Day == b.Day
 }
 
@@ -129,13 +133,16 @@ func GetDataForDateRange(
 	[]*weatherv1.WeatherInfo,
 	error,
 ) {
+	// We only have sample data for Copenhagen, DK. In a real application, this would query a database or call an external API.
 	if location != "Copenhagen, DK" {
 		return nil, errors.New("unknown location")
 	}
+
+	// Naively traverse the sample data and collect the days that fall within the requested date range.
 	result := []*weatherv1.WeatherInfo{}
 	collecting := false
 	for _, day := range copenhagenSamples {
-		if sameDate(day.Date, dateRange.Begin) {
+		if equalDate(day.Date, dateRange.Begin) {
 			collecting = true
 		}
 		if collecting {
@@ -146,11 +153,12 @@ func GetDataForDateRange(
 				Conditions:     day.Conditions,
 			})
 		}
-		if sameDate(day.Date, dateRange.End) {
+		if equalDate(day.Date, dateRange.End) {
 			break
 		}
 	}
 
+	// Convert temperatures to Celsius if requested. The sample data is in Fahrenheit.
 	if temperatureUnit == weatherv1.TemperatureUnit_CELCIUS {
 		for _, r := range result {
 			r.HiTemperature = proto.Float32(float32(int32(10.0*((r.GetHiTemperature()-32)*5/9))) / 10.0)

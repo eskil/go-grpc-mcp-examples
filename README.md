@@ -78,6 +78,8 @@ type GetWeatherResult struct {
 
 See the implementation of `getWeather` and the structures for the full example.
 
+See also https://www.redpanda.com/blog/turn-grpc-api-into-mcp-server for a detailed example.
+
 ## Setup & run
 
 ### Devcontainer

@@ -148,6 +148,8 @@ func main() {
 
 	// Register a specific `get_weather` tool with the server, which will be callable by clients.
 	// The description and schema of it's `params` argument are used by the LLM to generate valid requests for the tool.
+	// See the toplevel .mcp.json, that's where the LLM will find the tool
+	// and how to start the server.
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get_weather",
 		Description: "Get temperature and conditions for a location and date",
